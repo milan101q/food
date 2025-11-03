@@ -6,8 +6,9 @@ import RecipeDisplay from './components/RecipeDisplay.tsx';
 import RecipeSuggestions from './components/RecipeSuggestions.tsx';
 import VideoGenerator from './components/VideoGenerator.tsx';
 import LanguageSelector from './components/LanguageSelector.tsx';
+import CookingAssistant from './components/CookingAssistant.tsx';
 import { analyzeIngredients, generateRecipeSuggestions } from './services/geminiService.ts';
-import { AlchemistIcon, SparklesIcon } from './components/icons.tsx';
+import { AlchemistIcon, SparklesIcon, MicIcon } from './components/icons.tsx';
 import { translations, Language, Translation } from './i18n/translations.ts';
 
 const App: React.FC = () => {
@@ -70,6 +71,10 @@ const App: React.FC = () => {
     setError(t.error.imageGenerationFailed);
     setAppState(AppState.RECIPE_READY);
   }, [t]);
+
+  const handleStartCooking = useCallback(() => {
+    setAppState(AppState.COOKING);
+  }, []);
 
   const handleReset = useCallback(() => {
     setAppState(AppState.IDLE);
@@ -137,15 +142,33 @@ const App: React.FC = () => {
                 className="w-full max-w-md rounded-2xl shadow-2xl mb-8 border-2 border-purple-400/50"
               />
             )}
-            <button
-              onClick={handleReset}
-              className="px-8 py-4 bg-gradient-to-r from-green-400 to-teal-500 text-white font-bold rounded-full shadow-lg hover:scale-105 transform transition-transform duration-300 flex items-center gap-2"
-            >
-              <SparklesIcon/>
-              {t.imageReady.cookAnotherButton}
-            </button>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={handleReset}
+                className="px-8 py-4 bg-gradient-to-r from-gray-600 to-gray-700 text-white font-bold rounded-full shadow-lg hover:scale-105 transform transition-transform duration-300 flex items-center gap-2"
+              >
+                <SparklesIcon/>
+                {t.imageReady.cookAnotherButton}
+              </button>
+              <button
+                onClick={handleStartCooking}
+                className="px-8 py-4 bg-gradient-to-r from-green-400 to-teal-500 text-white font-bold rounded-full shadow-lg hover:scale-105 transform transition-transform duration-300 flex items-center gap-2"
+              >
+                <MicIcon/>
+                {t.cookingAssistant.startButton}
+              </button>
+            </div>
           </div>
         );
+      case AppState.COOKING:
+        return recipe ? (
+          <CookingAssistant 
+            recipe={recipe}
+            onFinish={handleReset}
+            t={t}
+            language={language}
+          />
+        ) : null;
     }
   };
 

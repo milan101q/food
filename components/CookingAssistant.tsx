@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-// Fix: Remove non-exported LiveSession, and rename Blob to avoid conflict with native Blob type.
 import { GoogleGenAI, LiveServerMessage, Modality, Blob as GenAIBlob, FunctionDeclaration, Type } from '@google/genai';
 import { Recipe } from '../types.ts';
 import { decode, encode, decodeAudioData } from '../utils/audioUtils.ts';
@@ -51,7 +50,6 @@ const CookingAssistant: React.FC<CookingAssistantProps> = ({ recipe, onFinish, t
     recipe.ingredients.map(name => ({ name, status: 'PENDING' }))
   );
   
-  // Fix: Use `any` for session promise as `LiveSession` is not an exported type.
   const sessionPromiseRef = useRef<Promise<any> | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -142,7 +140,6 @@ const CookingAssistant: React.FC<CookingAssistantProps> = ({ recipe, onFinish, t
             
             scriptProcessor.onaudioprocess = (event) => {
               const inputData = event.inputBuffer.getChannelData(0);
-              // Fix: Use the renamed GenAIBlob type.
               const pcmBlob: GenAIBlob = {
                 data: encode(new Uint8Array(new Int16Array(inputData.map(x => x * 32768)).buffer)),
                 mimeType: 'audio/pcm;rate=16000',

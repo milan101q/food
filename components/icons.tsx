@@ -32,7 +32,6 @@ export const FireIcon: React.FC = () => (
     </svg>
   );
 
-// Fix: Add MicIcon component.
 export const MicIcon: React.FC = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
@@ -41,7 +40,6 @@ export const MicIcon: React.FC = () => (
     </svg>
 );
 
-// Fix: Add MicOffIcon component.
 export const MicOffIcon: React.FC = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.5 14.5A7 7 0 0019 10v-2" />
@@ -52,21 +50,18 @@ export const MicOffIcon: React.FC = () => (
     </svg>
 );
 
-// Fix: Add StopIcon component.
 export const StopIcon: React.FC = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
     <path d="M6 6h12v12H6z" />
   </svg>
 );
 
-// Fix: Add CheckCircleIcon component.
 export const CheckCircleIcon: React.FC = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
 );
 
-// Fix: Add FlameIcon component.
 export const FlameIcon: React.FC = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C9.2 4.5 6 7.2 6 12c0 3.3 2.7 6 6 6s6-2.7 6-6c0-4.8-3.2-7.5-6-10z" />
@@ -74,7 +69,6 @@ export const FlameIcon: React.FC = () => (
     </svg>
 );
 
-// Fix: Add CircleIcon component.
 export const CircleIcon: React.FC = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

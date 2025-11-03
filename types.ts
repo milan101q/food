@@ -6,6 +6,7 @@ export enum AppState {
   RECIPE_READY,
   GENERATING_IMAGE,
   IMAGE_READY,
+  COOKING,
 }
 
 export interface Recipe {
