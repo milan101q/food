@@ -1,7 +1,8 @@
+
 import React from 'react';
-import { Recipe } from '../types';
-import { Translation } from '../i18n/translations';
-import { SparklesIcon } from './icons';
+import { Recipe } from '../types.ts';
+import { Translation } from '../i18n/translations.ts';
+import { SparklesIcon } from './icons.tsx';
 
 interface RecipeSuggestionsProps {
   recipes: Recipe[];

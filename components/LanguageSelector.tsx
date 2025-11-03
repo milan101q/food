@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Language, Translation, translations } from '../i18n/translations';
+import { Language, Translation, translations } from '../i18n/translations.ts';
 
 interface LanguageSelectorProps {
   onSelectLanguage: (lang: Language) => void;

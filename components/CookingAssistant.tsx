@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { GoogleGenAI, LiveSession, LiveServerMessage, Modality, Blob, FunctionDeclaration, Type } from '@google/genai';
-import { Recipe } from '../types';
-import { decode, encode, decodeAudioData } from '../utils/audioUtils';
-import { MicIcon, MicOffIcon, StopIcon, CheckCircleIcon, FlameIcon, CircleIcon } from './icons';
-import { Translation, Language, translations } from '../i18n/translations';
+// Fix: Remove non-exported LiveSession, and rename Blob to avoid conflict with native Blob type.
+import { GoogleGenAI, LiveServerMessage, Modality, Blob as GenAIBlob, FunctionDeclaration, Type } from '@google/genai';
+import { Recipe } from '../types.ts';
+import { decode, encode, decodeAudioData } from '../utils/audioUtils.ts';
+import { MicIcon, MicOffIcon, StopIcon, CheckCircleIcon, FlameIcon, CircleIcon } from './icons.tsx';
+import { Translation, Language, translations } from '../i18n/translations.ts';
 
 interface CookingAssistantProps {
   recipe: Recipe;
@@ -50,7 +51,8 @@ const CookingAssistant: React.FC<CookingAssistantProps> = ({ recipe, onFinish, t
     recipe.ingredients.map(name => ({ name, status: 'PENDING' }))
   );
   
-  const sessionPromiseRef = useRef<Promise<LiveSession> | null>(null);
+  // Fix: Use `any` for session promise as `LiveSession` is not an exported type.
+  const sessionPromiseRef = useRef<Promise<any> | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const outputAudioContextRef = useRef<AudioContext | null>(null);
@@ -140,7 +142,8 @@ const CookingAssistant: React.FC<CookingAssistantProps> = ({ recipe, onFinish, t
             
             scriptProcessor.onaudioprocess = (event) => {
               const inputData = event.inputBuffer.getChannelData(0);
-              const pcmBlob: Blob = {
+              // Fix: Use the renamed GenAIBlob type.
+              const pcmBlob: GenAIBlob = {
                 data: encode(new Uint8Array(new Int16Array(inputData.map(x => x * 32768)).buffer)),
                 mimeType: 'audio/pcm;rate=16000',
               };

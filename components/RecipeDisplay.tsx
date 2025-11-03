@@ -1,7 +1,8 @@
+
 import React from 'react';
-import { Recipe } from '../types';
-import { ImageIcon, FireIcon } from './icons';
-import { Translation } from '../i18n/translations';
+import { Recipe } from '../types.ts';
+import { ImageIcon, FireIcon } from './icons.tsx';
+import { Translation } from '../i18n/translations.ts';
 
 interface RecipeDisplayProps {
   recipe: Recipe;

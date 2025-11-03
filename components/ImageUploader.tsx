@@ -1,6 +1,7 @@
+
 import React, { useState, useCallback } from 'react';
-import { UploadIcon } from './icons';
-import { Translation } from '../i18n/translations';
+import { UploadIcon } from './icons.tsx';
+import { Translation } from '../i18n/translations.ts';
 
 interface ImageUploaderProps {
   onImageUpload: (imageData: string) => void;

@@ -1,6 +1,7 @@
+
 import { GoogleGenAI, Type, Modality } from "@google/genai";
-import { Recipe } from '../types';
-import { translations, Language } from '../i18n/translations';
+import { Recipe } from '../types.ts';
+import { translations, Language } from '../i18n/translations.ts';
 
 function getGoogleAI() {
     if (!process.env.API_KEY) {

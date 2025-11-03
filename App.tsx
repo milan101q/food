@@ -1,13 +1,14 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
-import { AppState, Recipe } from './types';
-import ImageUploader from './components/ImageUploader';
-import RecipeDisplay from './components/RecipeDisplay';
-import RecipeSuggestions from './components/RecipeSuggestions';
-import VideoGenerator from './components/VideoGenerator';
-import LanguageSelector from './components/LanguageSelector';
-import { analyzeIngredients, generateRecipeSuggestions } from './services/geminiService';
-import { AlchemistIcon, SparklesIcon } from './components/icons';
-import { translations, Language, Translation } from './i18n/translations';
+import { AppState, Recipe } from './types.ts';
+import ImageUploader from './components/ImageUploader.tsx';
+import RecipeDisplay from './components/RecipeDisplay.tsx';
+import RecipeSuggestions from './components/RecipeSuggestions.tsx';
+import VideoGenerator from './components/VideoGenerator.tsx';
+import LanguageSelector from './components/LanguageSelector.tsx';
+import { analyzeIngredients, generateRecipeSuggestions } from './services/geminiService.ts';
+import { AlchemistIcon, SparklesIcon } from './components/icons.tsx';
+import { translations, Language, Translation } from './i18n/translations.ts';
 
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>(AppState.SELECTING_LANGUAGE);

@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
-import { generateDishImage } from '../services/geminiService';
-import { Translation, Language, translations } from '../i18n/translations';
+import { generateDishImage } from '../services/geminiService.ts';
+import { Translation, Language, translations } from '../i18n/translations.ts';
 
 interface VideoGeneratorProps {
   recipeTitle: string;
