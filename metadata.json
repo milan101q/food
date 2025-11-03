@@ -1,0 +1,5 @@
+{
+  "name": "Culinary Alchemist",
+  "description": "An AI-powered chef that analyzes your ingredients, suggests recipes, and generates an image of the finished dish.",
+  "requestFramePermissions": []
+}
