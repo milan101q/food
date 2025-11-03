@@ -63,11 +63,9 @@
             IDLE: 'IDLE',
             ANALYZING: 'ANALYZING',
             SUGGESTING: 'SUGGESTING',
+            GENERATING_RECIPE: 'GENERATING_RECIPE',
             GENERATING_IMAGE: 'GENERATING_IMAGE',
             DISPLAYING_RECIPE: 'DISPLAYING_RECIPE',
-            GENERATING_VIDEO: 'GENERATING_VIDEO',
-            DISPLAYING_VIDEO: 'DISPLAYING_VIDEO',
-            COOKING: 'COOKING',
             ERROR: 'ERROR',
         };
 
@@ -91,27 +89,13 @@
                 uploadPrompt: "Upload a photo of your ingredients",
                 uploadButton: "Choose an image",
                 analyzing: "Analyzing ingredients...",
-                suggestionsPrompt: "Here are a few ideas:",
-                generateRecipe: "Generate Recipe",
+                suggestionsPrompt: "Here are 5 ideas for you:",
                 generatingRecipe: "Generating Recipe...",
                 generatingImage: "Painting a picture of your dish...",
-                generatingVideo: "Directing your cooking video...",
-                startCooking: "Start Live Cooking Assistant",
-                videoReady: "Your cooking video is ready!",
-                watchVideo: "Watch Video",
                 startOver: "Start Over",
                 error: "An unexpected error occurred. Please try again.",
-                cookingAssistantTitle: "Live Cooking Assistant",
-                listening: "Listening...",
-                speakNow: "Speak now...",
-                processing: "Processing...",
-                micIsOff: "Microphone is off",
-                user: "You",
-                assistant: "Assistant",
-                endSession: "End Session",
-                confirmEndSession: "Are you sure you want to end the session?",
-                yes: "Yes",
-                no: "No",
+                apiKeyError: "API Key Not Configured. This app is designed to run in a specific environment where an API key is securely provided. It may not function on a public website.",
+                calories: "Calories",
             },
             fa: {
                 title: "کیمیاگر آشپزی",
@@ -119,27 +103,13 @@
                 uploadPrompt: "عکسی از مواد اولیه خود آپلود کنید",
                 uploadButton: "انتخاب عکس",
                 analyzing: "در حال تجزیه و تحلیل مواد...",
-                suggestionsPrompt: "چند ایده برای شما:",
-                generateRecipe: "تولید دستور پخت",
+                suggestionsPrompt: "۵ ایده برای شما:",
                 generatingRecipe: "در حال تولید دستور پخت...",
                 generatingImage: "در حال نقاشی غذای شما...",
-                generatingVideo: "در حال کارگردانی ویدیوی آشپزی شما...",
-                startCooking: "شروع دستیار زنده آشپزی",
-                videoReady: "ویدیوی آشپزی شما آماده است!",
-                watchVideo: "تماشای ویدیو",
                 startOver: "شروع مجدد",
                 error: "خطای غیرمنتظره‌ای رخ داد. لطفاً دوباره تلاش کنید.",
-                cookingAssistantTitle: "دستیار زنده آشپزی",
-                listening: "در حال گوش دادن...",
-                speakNow: "الان صحبت کنید...",
-                processing: "در حال پردازش...",
-                micIsOff: "میکروفون خاموش است",
-                user: "شما",
-                assistant: "دستیار",
-                endSession: "پایان جلسه",
-                confirmEndSession: "آیا از پایان دادن به جلسه مطمئن هستید؟",
-                yes: "بله",
-                no: "خیر",
+                apiKeyError: "کلید API پیکربندی نشده است. این برنامه برای اجرا در یک محیط خاص که در آن کلید API به طور ایمن ارائه می شود، طراحی شده است. ممکن است در یک وب سایت عمومی کار نکند.",
+                calories: "کالری",
             },
         };
         // ========================================================================
@@ -148,54 +118,14 @@
 
 
         // ========================================================================
-        // --- START OF utils/audioUtils.ts ---
-        // ========================================================================
-        function decode(base64) {
-            const binaryString = atob(base64);
-            const len = binaryString.length;
-            const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-            return bytes;
-        }
-
-        async function decodeAudioData(data, ctx, sampleRate, numChannels) {
-            const dataInt16 = new Int16Array(data.buffer);
-            const frameCount = dataInt16.length / numChannels;
-            const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
-
-            for (let channel = 0; channel < numChannels; channel++) {
-                const channelData = buffer.getChannelData(channel);
-                for (let i = 0; i < frameCount; i++) {
-                    channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
-                }
-            }
-            return buffer;
-        }
-
-        function encode(bytes) {
-            let binary = '';
-            const len = bytes.byteLength;
-            for (let i = 0; i < len; i++) {
-                binary += String.fromCharCode(bytes[i]);
-            }
-            return btoa(binary);
-        }
-        // ========================================================================
-        // --- END OF utils/audioUtils.ts ---
-        // ========================================================================
-
-
-        // ========================================================================
         // --- START OF services/geminiService.ts ---
         // ========================================================================
         const getAiClient = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-        const generateRecipe = async (imageData, mimeType, suggestions, language) => {
+        const generateRecipe = async (imageData, mimeType, suggestionName, language) => {
             const ai = getAiClient();
             const langMap = { en: "English", fa: "Persian (Farsi)" };
-            const prompt = `Analyze the ingredients in this image. Based on these ingredients, generate a detailed recipe for "${suggestions}". The recipe should be in ${langMap[language]}. Include a creative name for the dish, a list of ingredients with quantities, and step-by-step instructions. The response must be in markdown format.`;
+            const prompt = `Analyze the ingredients in this image. Based on these ingredients, generate a detailed recipe for "${suggestionName}". The recipe should be in ${langMap[language]}. Include a creative name for the dish, a list of ingredients with quantities, and step-by-step instructions. The response must be in markdown format.`;
 
             const imagePart = {
                 inlineData: {
@@ -227,47 +157,6 @@
             const base64ImageBytes = response.generatedImages[0].image.imageBytes;
             return `data:image/png;base64,${base64ImageBytes}`;
         };
-
-        const generateVideo = async (recipe) => {
-            const hasApiKey = await window.aistudio.hasSelectedApiKey();
-            if (!hasApiKey) {
-                await window.aistudio.openSelectKey();
-            }
-
-            const ai = getAiClient();
-            const prompt = `Create a short, dynamic cooking video based on this recipe: ${recipe}. Show close-ups of the ingredients and the key cooking steps. The style should be upbeat and modern, suitable for social media.`;
-            
-            let operation = await ai.models.generateVideos({
-                model: 'veo-3.1-fast-generate-preview',
-                prompt: prompt,
-                config: {
-                    numberOfVideos: 1,
-                    resolution: '720p',
-                    aspectRatio: '9:16'
-                }
-            });
-
-            while (!operation.done) {
-                await new Promise(resolve => setTimeout(resolve, 5000));
-                try {
-                    operation = await ai.operations.getVideosOperation({ operation: operation });
-                } catch (e) {
-                    if (e.message.includes("Requested entity was not found.")) {
-                       await window.aistudio.openSelectKey();
-                       // re-throw to be caught by the caller
-                       throw new Error("API key invalid, please re-select.");
-                    }
-                    throw e; // re-throw other errors
-                }
-            }
-            const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
-            if (!downloadLink) {
-                 throw new Error("Video generation failed to produce a download link.");
-            }
-            const response = await fetch(`${downloadLink}&key=${process.env.API_KEY}`);
-            const videoBlob = await response.blob();
-            return URL.createObjectURL(videoBlob);
-        };
         // ========================================================================
         // --- END OF services/geminiService.ts ---
         // ========================================================================
@@ -280,37 +169,6 @@
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
           </svg>
-        );
-        const CheckCircleIcon = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-        );
-        const CircleIcon = ({ className }) => (
-            <svg viewBox="0 0 8 8" className={className}>
-                <circle cx="4" cy="4" r="4" />
-            </svg>
-        );
-        const FlameIcon = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7.C14.05 5.02 16 7.464 16 10c0 1-1.05 2.05-2.05 3.05C13.455 13.555 14 15 14 15a8.003 8.003 0 013.657 3.657z" />
-            </svg>
-        );
-        const MicIcon = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm5 10.5a.5.5 0 01.5.5v.5a.5.5 0 01-1 0V15a.5.5 0 01.5-.5z" clipRule="evenodd" />
-                <path d="M5 8a5 5 0 1010 0V4a5 5 0 10-10 0v4zM10 18a8 8 0 100-16 8 8 0 000 16z" />
-            </svg>
-        );
-        const MicOffIcon = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM5 8a5 5 0 0110 0v4a5 5 0 01-10 0V8zm1.05 7.95a.5.5 0 00.7.7l6.5-6.5a.5.5 0 00-.7-.7l-6.5 6.5z" clipRule="evenodd" />
-            </svg>
-        );
-        const StopIcon = () => (
-             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1zm4 0a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
         );
         // ========================================================================
         // --- END OF components/icons.tsx ---
@@ -411,16 +269,17 @@
         // ========================================================================
         const RecipeSuggestions = ({ suggestions, onSelect, t }) => {
              return (
-                <div className="w-full max-w-2xl text-center fade-in">
+                <div className="w-full max-w-3xl text-center fade-in">
                     <h2 className="text-3xl font-bold mb-6 font-lora">{t.suggestionsPrompt}</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {suggestions.map((suggestion, index) => (
                             <button
                                 key={index}
-                                onClick={() => onSelect(suggestion)}
+                                onClick={() => onSelect(suggestion.name)}
                                 className="p-6 bg-gray-800 rounded-lg text-left hover:bg-purple-800/50 border border-gray-700 hover:border-purple-500 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-purple-500"
                             >
-                                <span className="text-lg font-semibold text-gray-100">{suggestion}</span>
+                                <span className="text-lg font-semibold text-gray-100">{suggestion.name}</span>
+                                <p className="text-sm text-gray-400 mt-2">{t.calories}: {suggestion.calories}</p>
                             </button>
                         ))}
                     </div>
@@ -435,7 +294,7 @@
         // ========================================================================
         // --- START OF components/RecipeDisplay.tsx ---
         // ========================================================================
-        const RecipeDisplay = ({ recipe, image, onStartOver, onGenerateVideo, onStartCooking, t }) => {
+        const RecipeDisplay = ({ recipe, image, onStartOver, t }) => {
             const createMarkup = (markdown) => {
                 const html = markdown
                   .replace(/^# (.*$)/gim, '<h1 class="text-3xl font-bold font-lora text-purple-300 my-4">$1</h1>')
@@ -454,20 +313,6 @@
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
                             <img src={image} alt="Generated dish" className="w-full h-auto rounded-xl shadow-lg object-cover aspect-video" />
-                            <div className="mt-6 flex flex-col sm:flex-row gap-4">
-                                <button
-                                    onClick={onGenerateVideo}
-                                    className="flex-1 inline-flex items-center justify-center px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-green-500"
-                                >
-                                    🎬 {t.generatingVideo}
-                                </button>
-                                <button
-                                    onClick={onStartCooking}
-                                    className="flex-1 inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500"
-                                >
-                                  <FlameIcon /> {t.startCooking}
-                                </button>
-                            </div>
                         </div>
                         <div className="prose prose-invert max-w-none text-gray-300" dangerouslySetInnerHTML={createMarkup(recipe)}></div>
                     </div>
@@ -488,244 +333,6 @@
 
 
         // ========================================================================
-        // --- START OF components/VideoGenerator.tsx ---
-        // ========================================================================
-        const VideoGenerator = ({ videoUrl, onStartOver, t }) => {
-            return (
-                <div className="w-full max-w-md text-center fade-in">
-                    <h2 className="text-3xl font-bold mb-6 font-lora text-green-400">{t.videoReady}</h2>
-                    <div className="aspect-w-9 aspect-h-16 rounded-2xl overflow-hidden shadow-2xl border-4 border-purple-500">
-                        <video
-                            src={videoUrl}
-                            controls
-                            autoPlay
-                            className="w-full h-full object-cover"
-                        >
-                            Your browser does not support the video tag.
-                        </video>
-                    </div>
-                    <div className="mt-8">
-                        <button
-                            onClick={onStartOver}
-                            className="px-8 py-3 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-purple-500"
-                        >
-                            {t.startOver}
-                        </button>
-                    </div>
-                </div>
-            );
-        };
-        // ========================================================================
-        // --- END OF components/VideoGenerator.tsx ---
-        // ========================================================================
-
-
-        // ========================================================================
-        // --- START OF components/CookingAssistant.tsx ---
-        // ========================================================================
-        const CookingAssistant = ({ recipe, onEndSession, t }) => {
-            const { LiveServerMessage, Modality, Type } = GoogleGenAI;
-            
-            const [isListening, setIsListening] = React.useState(false);
-            const [isMicOn, setIsMicOn] = React.useState(true);
-            const [isEnding, setIsEnding] = React.useState(false);
-            const [transcripts, setTranscripts] = React.useState([]);
-
-            const sessionPromiseRef = React.useRef(null);
-            const inputAudioContextRef = React.useRef(null);
-            const outputAudioContextRef = React.useRef(null);
-            const scriptProcessorRef = React.useRef(null);
-            const mediaStreamSourceRef = React.useRef(null);
-            const streamRef = React.useRef(null);
-            const nextStartTimeRef = React.useRef(0);
-            const audioSourcesRef = React.useRef(new Set());
-            let currentInputTranscription = '';
-            let currentOutputTranscription = '';
-
-            const startSession = async () => {
-                try {
-                    const ai = getAiClient();
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    streamRef.current = stream;
-
-                    inputAudioContextRef.current = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
-                    outputAudioContextRef.current = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
-                    
-                    setIsListening(true);
-                    
-                    sessionPromiseRef.current = ai.live.connect({
-                        model: 'gemini-2.5-flash-native-audio-preview-09-2025',
-                        config: {
-                            responseModalities: [Modality.AUDIO],
-                            inputAudioTranscription: {},
-                            outputAudioTranscription: {},
-                            systemInstruction: `You are a helpful cooking assistant. Guide the user through the following recipe. Be encouraging and clear. Recipe: ${recipe}`,
-                        },
-                        callbacks: {
-                            onopen: () => {
-                                const source = inputAudioContextRef.current.createMediaStreamSource(stream);
-                                mediaStreamSourceRef.current = source;
-                                const scriptProcessor = inputAudioContextRef.current.createScriptProcessor(4096, 1, 1);
-                                scriptProcessorRef.current = scriptProcessor;
-
-                                scriptProcessor.onaudioprocess = (audioProcessingEvent) => {
-                                    if (!isMicOn) return;
-                                    const inputData = audioProcessingEvent.inputBuffer.getChannelData(0);
-                                    const pcmBlob = {
-                                        data: encode(new Uint8Array(new Int16Array(inputData.map(x => x * 32768)).buffer)),
-                                        mimeType: 'audio/pcm;rate=16000',
-                                    };
-                                    sessionPromiseRef.current.then((session) => {
-                                        session.sendRealtimeInput({ media: pcmBlob });
-                                    });
-                                };
-                                source.connect(scriptProcessor);
-                                scriptProcessor.connect(inputAudioContextRef.current.destination);
-                            },
-                            onmessage: async (message) => {
-                                if (message.serverContent?.inputTranscription) {
-                                    currentInputTranscription += message.serverContent.inputTranscription.text;
-                                }
-                                if (message.serverContent?.outputTranscription) {
-                                    currentOutputTranscription += message.serverContent.outputTranscription.text;
-                                }
-                                if (message.serverContent?.turnComplete) {
-                                    setTranscripts(prev => [
-                                        ...prev,
-                                        { speaker: 'user', text: currentInputTranscription },
-                                        { speaker: 'assistant', text: currentOutputTranscription }
-                                    ]);
-                                    currentInputTranscription = '';
-                                    currentOutputTranscription = '';
-                                }
-
-                                const base64EncodedAudioString = message.serverContent?.modelTurn?.parts[0]?.inlineData.data;
-                                if (base64EncodedAudioString) {
-                                    nextStartTimeRef.current = Math.max(nextStartTimeRef.current, outputAudioContextRef.current.currentTime);
-                                    const audioBuffer = await decodeAudioData(decode(base64EncodedAudioString), outputAudioContextRef.current, 24000, 1);
-                                    const source = outputAudioContextRef.current.createBufferSource();
-                                    source.buffer = audioBuffer;
-                                    source.connect(outputAudioContextRef.current.destination);
-                                    source.addEventListener('ended', () => {
-                                        audioSourcesRef.current.delete(source);
-                                    });
-                                    source.start(nextStartTimeRef.current);
-                                    nextStartTimeRef.current += audioBuffer.duration;
-                                    audioSourcesRef.current.add(source);
-                                }
-                            },
-                            onerror: (e) => console.error('Live session error:', e),
-                            onclose: () => console.log('Live session closed'),
-                        },
-                    });
-                } catch (error) {
-                    console.error("Failed to start cooking assistant:", error);
-                }
-            };
-
-            const stopSession = React.useCallback(() => {
-                setIsListening(false);
-                setIsEnding(false);
-
-                // Stop audio sources
-                audioSourcesRef.current.forEach(source => source.stop());
-                audioSourcesRef.current.clear();
-
-                // Stop mic stream
-                if (streamRef.current) {
-                    streamRef.current.getTracks().forEach(track => track.stop());
-                }
-
-                // Disconnect audio nodes
-                if (scriptProcessorRef.current) {
-                    scriptProcessorRef.current.disconnect();
-                    scriptProcessorRef.current = null;
-                }
-                if (mediaStreamSourceRef.current) {
-                    mediaStreamSourceRef.current.disconnect();
-                    mediaStreamSourceRef.current = null;
-                }
-                
-                // Close audio contexts
-                if (inputAudioContextRef.current && inputAudioContextRef.current.state !== 'closed') {
-                    inputAudioContextRef.current.close();
-                }
-                if (outputAudioContextRef.current && outputAudioContextRef.current.state !== 'closed') {
-                    outputAudioContextRef.current.close();
-                }
-
-                // Close session
-                if (sessionPromiseRef.current) {
-                    sessionPromiseRef.current.then(session => session.close());
-                    sessionPromiseRef.current = null;
-                }
-                onEndSession();
-            }, [onEndSession]);
-            
-            React.useEffect(() => {
-                startSession();
-                return () => {
-                   stopSession();
-                };
-            }, []);
-            
-             const handleToggleMic = () => {
-                setIsMicOn(prev => !prev);
-            };
-
-            const handleEndSessionClick = () => {
-                setIsEnding(true);
-            };
-
-            return (
-                <div className="w-full max-w-2xl mx-auto p-6 bg-gray-800 rounded-2xl shadow-2xl border border-gray-700 fade-in">
-                    <h2 className="text-2xl font-bold font-lora text-center mb-4">{t.cookingAssistantTitle}</h2>
-                    
-                    {isEnding && (
-                        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-                            <div className="bg-gray-700 p-6 rounded-lg shadow-xl">
-                                <p className="text-lg mb-4">{t.confirmEndSession}</p>
-                                <div className="flex justify-end gap-4">
-                                    <button onClick={() => setIsEnding(false)} className="px-4 py-2 bg-gray-600 rounded hover:bg-gray-500">{t.no}</button>
-                                    <button onClick={stopSession} className="px-4 py-2 bg-red-600 rounded hover:bg-red-500">{t.yes}</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    
-                    <div className="h-96 overflow-y-auto p-4 bg-gray-900/50 rounded-lg mb-4 flex flex-col-reverse">
-                        <div className="space-y-4">
-                         {transcripts.slice().reverse().map((t, i) => (
-                           <div key={i} className={`flex items-start gap-3 ${t.speaker === 'user' ? 'justify-end' : ''}`}>
-                             <div className={`max-w-xs md:max-w-md p-3 rounded-lg ${t.speaker === 'user' ? 'bg-purple-600' : 'bg-gray-700'}`}>
-                               <p className="text-sm">{t.text}</p>
-                             </div>
-                           </div>
-                         ))}
-                        </div>
-                    </div>
-                    
-                    <div className="flex flex-col items-center justify-center gap-4">
-                         <div className="flex items-center gap-2 text-gray-400">
-                             {isMicOn ? <CircleIcon className="w-2 h-2 text-red-500 animate-pulse" /> : <CircleIcon className="w-2 h-2 text-gray-500" />}
-                             <span>{isMicOn ? t.listening : t.micIsOff}</span>
-                         </div>
-                        <button onClick={handleToggleMic} className={`p-4 rounded-full transition-colors ${isMicOn ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'}`}>
-                            {isMicOn ? <MicIcon /> : <MicOffIcon />}
-                        </button>
-                        <button onClick={handleEndSessionClick} className="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-sm">
-                            <StopIcon /> {t.endSession}
-                        </button>
-                    </div>
-                </div>
-            );
-        };
-        // ========================================================================
-        // --- END OF components/CookingAssistant.tsx ---
-        // ========================================================================
-
-
-        // ========================================================================
         // --- START OF App.tsx ---
         // ========================================================================
         const App = () => {
@@ -737,9 +344,15 @@
             const [suggestions, setSuggestions] = React.useState([]);
             const [recipe, setRecipe] = React.useState(null);
             const [generatedImage, setGeneratedImage] = React.useState(null);
-            const [videoUrl, setVideoUrl] = React.useState(null);
 
             const t = translations[language];
+
+            React.useEffect(() => {
+                if (!process.env.API_KEY) {
+                    setError(t.apiKeyError);
+                    setAppState(AppState.ERROR);
+                }
+            }, [t.apiKeyError]);
 
             const handleImageUpload = async (data, type) => {
                 setImageData(data);
@@ -747,7 +360,7 @@
                 setAppState(AppState.ANALYZING);
                 try {
                     const ai = getAiClient();
-                    const prompt = "Analyze this image of ingredients and suggest 4 creative, distinct, and appealing recipe ideas. Respond with only a JSON array of strings, like [\"Recipe 1\", \"Recipe 2\", \"Recipe 3\", \"Recipe 4\"]. Do not include any other text or markdown.";
+                    const prompt = "Analyze this image of ingredients and suggest 5 creative, distinct, and appealing recipe ideas. For each recipe, provide an estimated calorie count per serving. Respond with only a JSON array of objects. Each object must have two keys: 'name' (string) and 'calories' (string). Example: [{\"name\": \"Spicy Tomato Pasta\", \"calories\": \"approx. 550 kcal\"}]. Do not include any other text or markdown.";
                     const imagePart = { inlineData: { data, mimeType: type } };
                     
                     const response = await ai.models.generateContent({
@@ -757,7 +370,14 @@
                     });
                     
                     const text = response.text.trim();
-                    setSuggestions(JSON.parse(text));
+                    const parsedSuggestions = JSON.parse(text);
+
+                    // Ensure we have exactly 5 suggestions, padding if necessary
+                    while (parsedSuggestions.length < 5) {
+                        parsedSuggestions.push({ name: "Creative Chef's Choice", calories: "Varies" });
+                    }
+
+                    setSuggestions(parsedSuggestions.slice(0, 5));
                     setAppState(AppState.SUGGESTING);
                 } catch (err) {
                     console.error(err);
@@ -766,36 +386,22 @@
                 }
             };
             
-            const handleSuggestionSelect = async (selectedSuggestion) => {
-                setAppState(AppState.GENERATING_IMAGE);
+            const handleSuggestionSelect = async (selectedSuggestionName) => {
+                setAppState(AppState.GENERATING_RECIPE);
                  try {
-                    const recipeText = await generateRecipe(imageData, mimeType, selectedSuggestion, language);
+                    const recipeText = await generateRecipe(imageData, mimeType, selectedSuggestionName, language);
                     setRecipe(recipeText);
+                    
+                    setAppState(AppState.GENERATING_IMAGE);
                     const imageUrl = await generateImage(recipeText);
                     setGeneratedImage(imageUrl);
+                    
                     setAppState(AppState.DISPLAYING_RECIPE);
                 } catch (err) {
                     console.error(err);
                     setError(t.error);
                     setAppState(AppState.ERROR);
                 }
-            };
-
-            const handleGenerateVideo = async () => {
-                setAppState(AppState.GENERATING_VIDEO);
-                try {
-                    const url = await generateVideo(recipe);
-                    setVideoUrl(url);
-                    setAppState(AppState.DISPLAYING_VIDEO);
-                } catch (err) {
-                    console.error(err);
-                    setError(t.error);
-                    setAppState(AppState.ERROR);
-                }
-            };
-
-            const handleStartCooking = () => {
-                setAppState(AppState.COOKING);
             };
 
             const resetState = () => {
@@ -806,7 +412,11 @@
                 setSuggestions([]);
                 setRecipe(null);
                 setGeneratedImage(null);
-                setVideoUrl(null);
+                // Re-check for API key on reset if it was the initial error
+                if (!process.env.API_KEY) {
+                    setError(t.apiKeyError);
+                    setAppState(AppState.ERROR);
+                }
             };
             
             const renderContent = () => {
@@ -817,21 +427,19 @@
                         return <div className="text-center"><div className="loader mx-auto"></div><p className="mt-4 text-xl">{t.analyzing}</p></div>;
                     case AppState.SUGGESTING:
                         return <RecipeSuggestions suggestions={suggestions} onSelect={handleSuggestionSelect} t={t} />;
+                    case AppState.GENERATING_RECIPE:
+                         return <div className="text-center"><div className="loader mx-auto"></div><p className="mt-4 text-xl">{t.generatingRecipe}</p></div>;
                     case AppState.GENERATING_IMAGE:
                          return <div className="text-center"><div className="loader mx-auto"></div><p className="mt-4 text-xl">{t.generatingImage}</p></div>;
                     case AppState.DISPLAYING_RECIPE:
-                        return <RecipeDisplay recipe={recipe} image={generatedImage} onStartOver={resetState} onGenerateVideo={handleGenerateVideo} onStartCooking={handleStartCooking} t={t} />;
-                    case AppState.GENERATING_VIDEO:
-                        return <div className="text-center"><div className="loader mx-auto"></div><p className="mt-4 text-xl">{t.generatingVideo}</p></div>;
-                    case AppState.DISPLAYING_VIDEO:
-                         return <VideoGenerator videoUrl={videoUrl} onStartOver={resetState} t={t} />;
-                    case AppState.COOKING:
-                         return <CookingAssistant recipe={recipe} onEndSession={resetState} t={t} />;
+                        return <RecipeDisplay recipe={recipe} image={generatedImage} onStartOver={resetState} t={t} />;
                     case AppState.ERROR:
                         return (
-                            <div className="text-center text-red-400">
-                                <p className="text-xl mb-4">{error}</p>
-                                <button onClick={resetState} className="px-6 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700">{t.startOver}</button>
+                            <div className="text-center text-yellow-300 bg-gray-800 p-6 rounded-lg shadow-lg max-w-lg">
+                                <p className="text-lg mb-4">{error}</p>
+                                {error !== t.apiKeyError && (
+                                     <button onClick={resetState} className="px-6 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700">{t.startOver}</button>
+                                )}
                             </div>
                         );
                     default:
